@@ -1,0 +1,27 @@
+{
+  "name": "nodejs-crud-api-jwt-authentication",
+  "version": "1.0.0",
+  "description": "This is a Node.js API project that demonstrates how to perform CRUD (Create, Read, Update, Delete) operations on a database and utilize JSON Web Tokens (JWT) for user authentication. It includes endpoints for creating, reading, updating, and deleting users, as well as for retrieving all users and filtering by gender. The project uses the popular Express.js framework and MongoDB for the database.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/obinnafranklinduru/nodejs-crud-api-jwt-authentication.git"
+  },
+  "keywords": [],
+  "author": "Obinna Franklin Duru",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/obinnafranklinduru/nodejs-crud-api-jwt-authentication/issues"
+  },
+  "homepage": "https://github.com/obinnafranklinduru/nodejs-crud-api-jwt-authentication#readme",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.0",
+    "mongoose": "^7.1.0"
+  }
+}
