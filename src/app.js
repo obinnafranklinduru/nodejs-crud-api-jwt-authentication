@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
 const userRoutes = require('./routes/user/user.router');
-const loginRoutes = require('./routes/login/login.router');
+const loginRoutes = require('./routes/authenticate/auth.router');
 
 // Middleware to parse incoming JSON data
 app.use(express.json());

@@ -1,16 +1,18 @@
 const { mockRequest, mockResponse } = require('jest-mock-req-res');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
-const User = require('../../models/userModel');
-const Token = require('../../models/tokenModel');
-const authController = require('../../controllers/authController');
+const bcrypt = require('bcrypt');
+
+const User = require('../../model/user.mongo');
+const Token = require('../../model/token.mongo');
+const { authenticateToken } = require('./auth.controller');
 
 jest.mock('jsonwebtoken');
 jest.mock('bcryptjs');
-jest.mock('../../models/userModel');
-jest.mock('../../models/tokenModel');
+jest.mock('../../model/user.mongo');
+jest.mock('../../model/token.mongo');
 
-describe('authController', () => {
+describe('Login Controller', () => {
+
     describe('register', () => {
         let req;
         let res;
@@ -40,7 +42,7 @@ describe('authController', () => {
             bcrypt.hash.mockResolvedValue(hashedPassword);
             User.create.mockResolvedValue(user);
 
-            await authController.register(req, res);
+            await authenticateToken.register(req, res);
 
             expect(bcrypt.genSalt).toBeCalledWith(10);
             expect(bcrypt.hash).toBeCalledWith(password, 'salt');

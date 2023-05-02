@@ -1,19 +1,44 @@
-const User = require('../../model/user.mongo');
 const jwt = require('jsonwebtoken');
 require('dotenv').config()
 
+const User = require('../../model/user.mongo');
+const { createToken } = require('../authenticate/auth.controller');
+
+// Handle Errors
+function handleError(err) {
+    let errors = {};
+
+    // duplicate key error
+    if (err.code === 11000) {
+        errors.email = 'email address already exists';
+        return errors;
+    }
+
+    // validation errors
+    if (err.message.includes('User validation failed')) {
+        Object.values(err.errors).forEach(({ properties }) => {
+            errors[properties.path] = properties.message
+        });
+    }
+
+    return errors;
+}
+
 async function createUser(req, res) {
     try {
-        // Create a new User instance using the data from the request body.
-        const user = new User(req.body);
+        // Get the data from the request body.
+        const { name, email, password, gender } = req.body;
 
-        // Save the new user to the database using the save() method.
-        await user.save();
+        // Save user to the database using the create() method.
+        const user = await User.create({ name, email, password, gender });
+
+        const accessToken = createToken(user._id);
 
         // Send a 201 (Created) and the user object as the response.
-        res.status(201).send(user);
+        res.status(201).send({user: user._id, token: accessToken});
     } catch (error) {
-        res.status(400).send(error);
+        const errors = handleError(error);
+        res.status(400).send({errors});
     }
 }
 
@@ -100,15 +125,7 @@ async function getUsers(req, res) {
 }
 
 async function getMaleUsers(req, res) {
-    try {
-        // Extract the token from the "Authorization" header of the request object 
-        // and remove the "Bearer " prefix.
-        const token = req.header('Authorization').replace('Bearer ', '');
-
-        // Verify the authenticity of the token using the verify() method 
-        // from the "jsonwebtoken" library and the JWT_SECRET environment variable.
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        
+    try {        
         // Retrieve all the user objects from the database whose "gender" property is set to "male".
         const users = await User.find({ gender: 'male' });
         

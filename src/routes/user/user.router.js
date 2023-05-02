@@ -10,7 +10,7 @@ const {
     getMaleUsers
 } = require('./user.controller');
 
-const { authenticateToken } = require('../login/login.controller');
+const { authenticateToken } = require('../authenticate/auth.controller');
 
 // Define a route for getting all users.
 router.get('/', authenticateToken, getUsers);
