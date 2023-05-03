@@ -45,7 +45,7 @@ async function getUserById(req, res) {
         if (!user) return res.status(404).json({ error: 'user not found' });
 
         // Send the user object as the response.
-        res.status(200).send(user);
+        res.status(200).send({ user });
     } catch (error) {
         res.status(401).send(error);
     }
@@ -60,13 +60,13 @@ async function updateUser(req, res) {
         if (!user) return res.status(404).json({ error: 'user not found' });
 
         // Update the user properties if they exist in the request body
-        if (req.body.name != null) {
+        if (req.body.name !== undefined) {
             user.name = req.body.name;
         }
-        if (req.body.email != null) {
+        if (req.body.email !== undefined) {
             user.email = req.body.email;
         }
-        if (req.body.password != null) {
+        if (req.body.password !== undefined) {
             user.password = req.body.password;
         }
 
@@ -89,7 +89,7 @@ async function deleteUserById(req, res) {
         const user = await User.findByIdAndDelete(req.params.id);
 
         // If no user is found, return a 404 and an error message as the response.
-        if (!user) return res.status(404).send({ error: 'user not found' });
+        if (!user) return res.status(404).json({ error: 'user not found' });
 
         res.status(204).send(user);
     } catch (error) {

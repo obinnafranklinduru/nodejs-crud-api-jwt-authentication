@@ -89,12 +89,12 @@ function authenticateToken(req, res, next) {
     const authHeader = req.header('Authorization');
 
     // If no authHeader is present, return an error response
-    if (!authHeader) return res.status(401).json({ error: 'Authorization header missing' });
+    if (!authHeader) return res.status(401).json({ message: 'Unauthorized' });
 
     // Verify the authHeader using the secret key
     jwt.verify(authHeader, process.env.JWT_SECRET_ACCESS_TOKEN, (err, user) => {
         // If the authHeader is invalid, return a forbidden error response
-        if (err) return res.status(403).json({ error: 'Invalid token' });
+        if (err) return res.status(401).json({ message: 'Unauthorized' });
 
         // Store the user object in the request object and move to the next middleware
         req.user = user;
