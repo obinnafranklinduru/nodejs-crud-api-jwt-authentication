@@ -14,8 +14,8 @@ To run this project, you will need to have the following installed on your syste
 
 1. Clone this repository to your local machine.
 2. Install the required packages by running `npm install` in the root directory of the project.
-3. Start the MongoDB server by running `mongod` in your terminal.
-4. Start the API server by running `npm start`.
+3. Start the API server by running `npm start`.
+4. Test the API by running `npm test`.
 
 ## Usage
 
@@ -25,19 +25,20 @@ Once the API server is running, you can use [Postman](https://www.postman.com/) 
 
 | Method | Endpoint    | Description                                           |
 | ------ | ----------- | ----------------------------------------------------- |
-| POST   | /users      | Create a new user                                     |
-| GET    | /users/:id  | Retrieve a user by ID (requires JWT authentication)   |
-| PUT    | /users/:id  | Update a user by ID (requires JWT authentication)     |
-| DELETE | /users/:id  | Delete a user by ID (requires JWT authentication)     |
-| GET    | /users      | Retrieve all users                                    |
-| GET    | /users/male | Retrieve all male users (requires JWT authentication) |
-| POST   | /login      | Authenticate user and generate JWT token              |
+| POST   | /api/users      | Create a new user                                     |
+| GET    | /api/users/:id  | Retrieve a user by ID (requires JWT authentication)   |
+| PUT    | /api/users/:id  | Update a user by ID (requires JWT authentication)     |
+| DELETE | /api/users/:id  | Delete a user by ID (requires JWT authentication)     |
+| GET    | /api/users      | Retrieve all users                                    |
+| GET    | /api/users/male | Retrieve all male users (requires JWT authentication) |
+| POST   | /api/login      | Authenticate user and generate JWT token              |
+| POST   | /api/token      | Generate a Refresh Token and Authenticate user        |
 
 ### Authentication
 
 Some of the endpoints require JWT authentication. To authenticate a user and generate a token, send a POST request to the `/login` endpoint with the user's email and password in the request body. The endpoint will return a JWT token that can be used to access the protected endpoints.
 
-To use the token, include it in the `Authorization` header of the request with the prefix `Bearer`. For example:
+To use the token, include it in the `Authorization` header of the request.
 
 ### Environment Variables
 
@@ -49,4 +50,4 @@ Contributions are welcome! If you find a bug or have a feature request, please o
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See the [LICENSE](https://opensource.org/license/mit/) file for details.
