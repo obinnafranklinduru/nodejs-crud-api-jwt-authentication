@@ -12,7 +12,8 @@ const startServer = async () => {
         await mongooseConnect();
 
         // Start the server, listening on the specified port.
-        server.listen(PORT, () => console.log(`Listening on http://localhost:${PORT}`));
+        server.listen(PORT, () => console.log(`Listening on http://localhost:${PORT}`))
+            .on('error', (error) => console.error(`Failed to start server: ${error.message}`));
     } catch (e) {
         console.error(e.message);
     }

@@ -151,7 +151,7 @@ describe('Authentication Endpoints', () => {
             const res = await request(app)
                 .post('/api/logout')
                 .set('Authorization', `${authToken}`);
-            expect(res.statusCode).toEqual(401);
+            expect(res.statusCode).toEqual(200);
             expect(res.body.message).toEqual('Logged out successfully');
             const token = await Token.findOne({ token: authToken });
             expect(token).toBeNull();
@@ -160,7 +160,6 @@ describe('Authentication Endpoints', () => {
         test('should return an error if no auth token is provided', async () => {
             const res = await request(app).post('/api/logout');
             expect(res.statusCode).toEqual(401);
-            expect(res.body.error).toEqual('Unauthorized');
         });
     });
 

@@ -7,7 +7,8 @@ const userSchema = new mongoose.Schema(
     name: {
       type: String,
       required: [true, 'Please enter a name'],
-      trim: true
+      trim: true,
+      maxlength: [50, 'Name must be at most 50 characters'],
     },
     email: {
       type: String,
@@ -33,14 +34,18 @@ const userSchema = new mongoose.Schema(
 
 // fire a function before docoument saved to the database
 userSchema.pre('save', async function (next) {
-  // Generate a salt and hash the user's password before saving
-  const salt = await bcrypt.genSalt();
+  try {
+    // Generate a salt and hash the user's password before saving
+    const salt = await bcrypt.genSalt(10);
 
-  // Hashes the user password before saving it to the database using bcrypt algorithm
-  this.password = await bcrypt.hash(this.password, salt);
+    // Hashes the user password before saving it to the database using bcrypt algorithm
+    this.password = await bcrypt.hash(this.password, salt);
 
-  next();
-})
+    next();
+  } catch (error) {
+    console.error(error);
+  }
+});
 
 const User = mongoose.model('User', userSchema);
 
