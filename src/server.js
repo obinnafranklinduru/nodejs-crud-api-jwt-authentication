@@ -1,7 +1,7 @@
 const http = require('http');
 const app = require('./app');
 const { mongooseConnect } = require('./utils/mongo');
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5050;
 
 // Create a new HTTP server using the app as its request listener.
 const server = http.createServer(app)

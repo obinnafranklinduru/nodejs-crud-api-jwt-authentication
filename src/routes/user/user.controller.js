@@ -48,9 +48,9 @@ async function getUserById(req, res) {
         if (!user) return res.status(404).json({ error: 'user not found' });
 
         // Send the user object as the response.
-        res.send(user);
+        res.status(200).send(user);
     } catch (error) {
-        res.status(500).send(error);
+        res.status(401).send(error);
     }
 }
 
@@ -77,7 +77,7 @@ async function updateUser(req, res) {
         const updatedUser = await user.save();
 
         // Return the updated user as the response
-        res.json(updatedUser);
+        res.status(200).json(updatedUser);
     } catch (error) {
         // If there is an error, handle it and return a 400 response with the error message(s)
         const errors = handleError(error);
@@ -94,7 +94,7 @@ async function deleteUserById(req, res) {
         // If no user is found, return a 404 and an error message as the response.
         if (!user) return res.status(404).send({ error: 'user not found' });
 
-        res.send(user);
+        res.status(204).send(user);
     } catch (error) {
         res.status(500).send(error);
     }
@@ -106,9 +106,9 @@ async function getUsers(req, res) {
         const users = await User.find({});
 
         // Send the retrieved user objects as the response.
-        res.send(users);
+        res.status(200).send(users);
     } catch (error) {
-        res.status(500).send(error);
+        res.status(401).json({ message: 'Unauthorized' });
     }
 }
 

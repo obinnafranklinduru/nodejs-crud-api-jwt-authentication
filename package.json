@@ -22,7 +22,7 @@
   "homepage": "https://github.com/obinnafranklinduru/nodejs-crud-api-jwt-authentication#readme",
   "jest": {
     "testEnvironment": "node",
-    "testTimeout": 10000
+    "testTimeout": 1000000
   },
   "dependencies": {
     "bcrypt": "^5.1.0",

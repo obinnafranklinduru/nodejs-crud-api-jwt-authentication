@@ -1,7 +1,8 @@
 const request = require('supertest');
 
-const app = require('../../server');
+const app = require('../../app');
 const User = require('../../model/user.mongo');
+const Token = require('../../model/token.mongo');
 const { mongooseConnect, mongooseDisconnect } = require('../../utils/mongo');
 
 describe('User Routes Endpoints', () => {
@@ -29,12 +30,12 @@ describe('User Routes Endpoints', () => {
   });
 
   afterAll(async () => {
-    await mongooseDisconnect()
-
     await User.deleteMany({
       email: { $in: ['testuser@example.com', 'john@example.com', 'jane@example.com'] }
     });
     await Token.deleteOne({ token: authToken });
+
+    await mongooseDisconnect()
   });
 
   describe('GET /users', () => {
@@ -47,7 +48,7 @@ describe('User Routes Endpoints', () => {
     it('should return an array of users when authenticated', async () => {
       const response = await request(app)
         .get('/api/users')
-        .set('authorization', `Bearer ${authToken}`);
+        .set('Authorization', `${authToken}`);
       expect(response.status).toBe(200);
       expect(response.body._id).toEqual(userId);
     });
@@ -62,8 +63,8 @@ describe('User Routes Endpoints', () => {
 
     it('should return a user by ID when authenticated', async () => {
       const response = await request(app)
-        .get(`/users/${userId}`)
-        .set('authorization', `Bearer ${authToken}`);
+        .get(`/api/users/${userId}`)
+        .set('Authorization', `${authToken}`);
       expect(response.status).toBe(200);
       expect(response.body._id).toEqual(userId);
     });
@@ -80,13 +81,10 @@ describe('User Routes Endpoints', () => {
         ];
       await User.create(users);
 
-      // Authenticate the first male user
-      const authToken = generateAuthToken({ id: users[0]._id });
-
       // Send a GET request to /users/male with the auth token
       const response = await request(app)
         .get('/api/users/male')
-        .set('authorization', `Bearer ${authToken}`);
+        .set('Authorization', `${authToken}`);
       expect(response.status).toBe(200);
 
       // Expect the response body to contain an array with only male users
@@ -136,7 +134,7 @@ describe('User Routes Endpoints', () => {
 
       const response = await request(app)
         .post('/api/users')
-        .set('authorization', `Bearer ${authToken}`)
+        .set('Authorization', `${authToken}`)
         .send(newUser);
 
       expect(response.status).toBe(201);
@@ -155,7 +153,7 @@ describe('User Routes Endpoints', () => {
 
       const response = await request(app)
         .patch(`/api/users/${userId}`)
-        .set('authorization', `Bearer ${authToken}`)
+        .set('Authorization', `${authToken}`)
         .send(updatedUser);
 
       expect(response.status).toBe(200);
@@ -168,7 +166,7 @@ describe('User Routes Endpoints', () => {
     test('should delete a user', async () => {
       const response = await request(app)
         .delete(`/api/users/${userId}`)
-        .set('authorization', `Bearer ${authToken}`);
+        .set('Authorization', `${authToken}`);
 
       expect(response.status).toBe(204);
 
