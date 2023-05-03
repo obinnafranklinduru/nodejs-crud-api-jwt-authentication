@@ -1,192 +1,183 @@
-const { mockRequest, mockResponse } = require('jest-mock-req-res');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
+const mongoose = require('mongoose');
+const request = require('supertest');
 
+const app = require('../../server');
+const { generateAccessToken } = require('./auth.controller');
 const User = require('../../model/user.mongo');
 const Token = require('../../model/token.mongo');
-const { authenticateToken } = require('./auth.controller');
+const { mongooseConnect, mongooseDisconnect } = require('../../utils/mongo');
 
-jest.mock('jsonwebtoken');
-jest.mock('bcryptjs');
-jest.mock('../../model/user.mongo');
-jest.mock('../../model/token.mongo');
+describe('Auth endpoints', () => {
+    let testUser;
+    let authToken;
 
-describe('Login Controller', () => {
+    beforeAll(async () => {
+        await mongooseConnect();
 
-    describe('register', () => {
-        let req;
-        let res;
+        testUser = new User({
+            name: 'Test User',
+            email: 'testuser@example.com',
+            password: 'password',
+        });
+        await testUser.save();
 
-        beforeEach(() => {
-            req = mockRequest();
-            res = mockResponse();
+        const res = await request(app)
+            .post('/api/auth/login')
+            .send({ email: 'testuser@example.com', password: 'password' });
+        authToken = res.body.token;
+    });
+
+    afterAll(async () => {
+        await mongooseDisconnect();
+
+        await User.deleteOne({ email: 'testuser@example.com' });
+        await Token.deleteMany({});
+    });
+
+    describe('User model', () => {
+        it('should hash password before saving', async () => {
+            const user = new User({
+                name: 'Test User',
+                email: 'user@example.com',
+                password: 'password123',
+            });
+      
+            await user.save();
+      
+            expect(user.password).not.toBe('password123');
         });
 
-        it('should create a new user with hashed password', async () => {
-            const password = 'password';
-            const hashedPassword = 'hashedPassword';
-            const user = {
-                _id: '1234',
-                name: 'John Doe',
-                email: 'john@example.com',
-                password: hashedPassword,
-            };
-
-            req.body = {
-                name: 'John Doe',
-                email: 'john@example.com',
-                password,
-            };
-
-            bcrypt.genSalt.mockResolvedValue('salt');
-            bcrypt.hash.mockResolvedValue(hashedPassword);
-            User.create.mockResolvedValue(user);
-
-            await authenticateToken.register(req, res);
-
-            expect(bcrypt.genSalt).toBeCalledWith(10);
-            expect(bcrypt.hash).toBeCalledWith(password, 'salt');
-            expect(User.create).toBeCalledWith({
-                name: 'John Doe',
-                email: 'john@example.com',
-                password: hashedPassword,
-            });
-            expect(res.status).toBeCalledWith(201);
-            expect(res.json).toBeCalledWith({
-                message: 'User created successfully',
-                user: {
-                    _id: '1234',
-                    name: 'John Doe',
-                    email: 'john@example.com',
-                },
-            });
+        it('should throw validation errors if required fields are missing', async () => {
+            const user = new User({});
+            let err;
+            try {
+                await user.save();
+            } catch (error) {
+                err = error;
+            }
+            expect(err).toBeInstanceOf(mongoose.Error.ValidationError);
+            expect(err.errors.name).toBeDefined();
+            expect(err.errors.email).toBeDefined();
+            expect(err.errors.password).toBeDefined();
         });
 
-        it('should return a 400 error if email is not provided', async () => {
-            req.body = {
-                name: 'John Doe',
-                password: 'password',
-            };
-
-            await authController.register(req, res);
-
-            expect(res.status).toBeCalledWith(400);
-            expect(res.json).toBeCalledWith({
-                error: 'Please provide a name, email and password',
+        it('should throw validation errors if email is invalid', async () => {
+            const user = new User({
+                name: 'Test User',
+                email: 'invalid-email',
+                password: 'password123',
             });
+            let err;
+            try {
+                await user.save();
+            } catch (error) {
+                err = error;
+            }
+            expect(err).toBeInstanceOf(mongoose.Error.ValidationError);
+            expect(err.errors.email).toBeDefined();
         });
 
-        it('should return a 400 error if password is not provided', async () => {
-            req.body = {
-                name: 'John Doe',
-                email: 'john@example.com',
-            };
-
-            await authController.register(req, res);
-
-            expect(res.status).toBeCalledWith(400);
-            expect(res.json).toBeCalledWith({
-                error: 'Please provide a name, email and password',
+        it('should throw validation errors if password is too short', async () => {
+            const user = new User({
+                name: 'Test User',
+                email: 'test@example.com',
+                password: 'short',
             });
+            let err;
+            try {
+                await user.save();
+            } catch (error) {
+                err = error;
+            }
+            expect(err).toBeInstanceOf(mongoose.Error.ValidationError);
+            expect(err.errors.password).toBeDefined();
         });
 
-        it('should return a 409 error if email is already taken', async () => {
-            req.body = {
-                name: 'John Doe',
-                email: 'john@example.com',
-                password: 'password',
-            };
-
-            User.findOne.mockResolvedValue({
-                _id: '1234',
-                name: 'John Doe',
-                email: 'john@example.com',
+        it('should throw validation errors if email already exists', async () => {
+            const user1 = new User({
+                name: 'Test User 1',
+                email: 'test@example.com',
+                password: 'password123',
             });
 
-            await authController.register(req, res);
-
-            expect(User.findOne).toBeCalledWith({ email: 'john@example.com' });
-            expect(res.status).toBeCalledWith(409);
-            expect(res.json).toBeCalledWith({
-                error: 'Email address already in use',
+            const user2 = new User({
+                name: 'Test User 2',
+                email: 'test@example.com',
+                password: 'password456',
             });
+
+            await user1.save();
+
+            let err;
+            try {
+                await user2.save();
+            } catch (error) {
+                err = error;
+            }
+            expect(err).toBeInstanceOf(mongoose.Error.ValidationError);
+            expect(err.errors.email).toBeDefined();
         });
 
-        it('should handle errors thrown by User.create', async () => {
-            req.body = {
-                name: 'John Doe',
-                email: 'john@example.com',
-                password: 'password',
-            };
+        it('should create user with default gender if not provided', async () => {
+            const user = new User({
+                name: 'Test User',
+                email: 'good@example.com',
+                password: 'password123',
+            });
+            await user.save();
+            expect(user.gender).toBe('Male');
+        });
+    });
 
-            const error = new Error('Failed to create user');
-            jest.spyOn(User, 'create').mockRejectedValue(error);
-
-            await userController.createUser(req, res);
-
-            expect(res.status).toHaveBeenCalledWith(500);
-            expect(res.send).toHaveBeenCalledWith({ error: error.message });
-        })
-        it('should return 401 Unauthorized error when given invalid token', async () => {
-            const response = await request(app)
-                .post('/auth/logout')
-                .set('Authorization', `Bearer invalid_token`);
-            expect(response.status).toBe(401);
-            expect(response.body.message).toBe('Unauthorized');
+    describe('POST /api/auth/login', () => {
+        test('should return an auth token for a valid login', async () => {
+            const res = await request(app)
+                .post('/api/auth/login')
+                .send({ email: 'testuser@example.com', password: 'password' });
+            expect(res.statusCode).toEqual(200);
+            expect(res.body.token).toBeDefined();
         });
 
-        it('should return 401 Unauthorized error when given expired token', async () => {
-            // generate an expired token
-            const expiredToken = jwt.sign({ userId: createdUser._id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '-1s' });
-
-            const response = await request(app)
-                .post('/auth/logout')
-                .set('Authorization', `Bearer ${expiredToken}`);
-            expect(response.status).toBe(401);
-            expect(response.body.message).toBe('Unauthorized');
+        test('should return an error for an invalid login', async () => {
+            const res = await request(app)
+                .post('/api/auth/login')
+                .send({ email: 'testuser@example.com', password: 'wrongpassword' });
+            expect(res.statusCode).toEqual(401);
+            expect(res.body.error).toEqual('Unauthorized');
+        });
+    });
+    
+    describe('POST /api/auth/logout', () => {
+        test('should delete the auth token for the current user', async () => {
+            const res = await request(app)
+                .post('/api/auth/logout')
+                .set('Authorization', `Bearer ${authToken}`);
+            expect(res.statusCode).toEqual(200);
+            expect(res.body.message).toEqual('Logged out successfully');
+            const token = await Token.findOne({ token: authToken });
+            expect(token).toBeNull();
         });
 
-        it('should logout the user successfully when given a valid access token', async () => {
-            const response = await request(app)
-                .post('/auth/logout')
-                .set('Authorization', `Bearer ${accessToken}`);
-            expect(response.status).toBe(200);
-            expect(response.body.message).toBe('Successfully logged out');
+        test('should return an error if no auth token is provided', async () => {
+            const res = await request(app).post('/api/auth/logout');
+            expect(res.statusCode).toEqual(401);
+            expect(res.body.error).toEqual('Unauthorized');
+        });
+    });
+
+    describe('GET /api/auth/token', () => {
+        test('should return the auth token for the current user', async () => {
+            const res = await request(app)
+                .get('/api/auth/token')
+                .set('Authorization', `Bearer ${authToken}`);
+            expect(res.statusCode).toEqual(200);
+            expect(res.body.token).toEqual(authToken);
         });
 
-        it('should revoke all tokens when user password is changed', async () => {
-            // generate another access token before changing password
-            const anotherAccessToken = jwt.sign({ userId: createdUser._id }, process.env.ACCESS_TOKEN_SECRET);
-
-            const response = await request(app)
-                .put(`/users/${createdUser._id}/password`)
-                .set('Authorization', `Bearer ${accessToken}`)
-                .send({ newPassword: 'newpassword' });
-            expect(response.status).toBe(200);
-            expect(response.body.message).toBe('Password updated successfully');
-
-            // attempt to use revoked access token
-            const accessResponse = await request(app)
-                .get('/users')
-                .set('Authorization', `Bearer ${accessToken}`);
-            expect(accessResponse.status).toBe(401);
-            expect(accessResponse.body.message).toBe('Unauthorized');
-
-            // attempt to use another access token
-            const anotherAccessResponse = await request(app)
-                .get('/users')
-                .set('Authorization', `Bearer ${anotherAccessToken}`);
-            expect(anotherAccessResponse.status).toBe(401);
-            expect(anotherAccessResponse.body.message).toBe('Unauthorized');
-
-            // generate new access token after password change
-            const newAccessToken = jwt.sign({ userId: createdUser._id }, process.env.ACCESS_TOKEN_SECRET);
-            const newAccessResponse = await request(app)
-                .get('/users')
-                .set('Authorization', `Bearer ${newAccessToken}`);
-            expect(newAccessResponse.status).toBe(200);
-            expect(newAccessResponse.body).toHaveProperty('users');
-            expect(newAccessResponse.body.users).toHaveLength(1);
+        test('should return an error if no auth token is provided', async () => {
+            const res = await request(app).get('/api/auth/token');
+            expect(res.statusCode).toEqual(401);
+            expect(res.body.error).toEqual('Unauthorized');
         });
     });
 });

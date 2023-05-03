@@ -2,7 +2,6 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config()
 
 const User = require('../../model/user.mongo');
-const { createToken } = require('../authenticate/auth.controller');
 
 // Handle Errors
 function handleError(err) {
@@ -32,10 +31,8 @@ async function createUser(req, res) {
         // Save user to the database using the create() method.
         const user = await User.create({ name, email, password, gender });
 
-        const accessToken = createToken(user._id);
-
         // Send a 201 (Created) and the user object as the response.
-        res.status(201).send({user: user._id, token: accessToken});
+        res.status(201).send({user: user._id});
     } catch (error) {
         const errors = handleError(error);
         res.status(400).send({errors});
@@ -48,9 +45,7 @@ async function getUserById(req, res) {
         const user = await User.findById(req.params.id);
 
         // If no user is found, return a 404 and an error message as the response.
-        if (!user) {
-            return res.status(404).json({ error: 'user not found' });
-        }
+        if (!user) return res.status(404).json({ error: 'user not found' });
 
         // Send the user object as the response.
         res.send(user);
@@ -60,38 +55,33 @@ async function getUserById(req, res) {
 }
 
 async function updateUser(req, res) {
-    // Get an array of the keys of the properties to be updated from the request body.
-    const updates = Object.keys(req.body);
-
-    // Define an array of the properties that are allowed to be updated.
-    const allowedUpdates = ['name', 'email', 'password'];
-
-    // Check that every property in the updates array is allowed to be updated.
-    const isValidOperation = updates.every(update => allowedUpdates.includes(update));
-
-     // If any of the properties are not allowed to be updated, send a 400 and an error message
-    if (!isValidOperation) {
-        return res.status(400).send({ error: 'Invalid updates!' });
-    }
-
     try {
-        // Find the user with the specified ID using the findById() method.
+        // Find the user by id
         const user = await User.findById(req.params.id);
 
         // If no user is found, return a 404 and an error message as the response.
-        if (!user) {
-            return res.status(404).send({ error: 'user not found' });
+        if (!user) return res.status(404).json({ error: 'user not found' });
+
+        // Update the user properties if they exist in the request body
+        if (req.body.name != null) {
+            user.name = req.body.name;
+        }
+        if (req.body.email != null) {
+            user.email = req.body.email;
+        }
+        if (req.body.password != null) {
+            user.password = req.body.password;
         }
 
-        // Update each property of the user object with the new values from the request body.
-        updates.forEach(update => (user[update] = req.body[update]));
+        // Save the updated user to the database
+        const updatedUser = await user.save();
 
-        // Save the updated user object to the database.
-        await user.save();
-
-        res.send(user);
+        // Return the updated user as the response
+        res.json(updatedUser);
     } catch (error) {
-        res.status(400).send(error);
+        // If there is an error, handle it and return a 400 response with the error message(s)
+        const errors = handleError(error);
+        res.status(400).send({ errors });
     }
 }
 
@@ -102,9 +92,7 @@ async function deleteUserById(req, res) {
         const user = await User.findByIdAndDelete(req.params.id);
 
         // If no user is found, return a 404 and an error message as the response.
-        if (!user) {
-            return res.status(404).send({ error: 'user not found' });
-        }
+        if (!user) return res.status(404).send({ error: 'user not found' });
 
         res.send(user);
     } catch (error) {
