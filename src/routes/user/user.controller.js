@@ -23,7 +23,7 @@ function handleError(err) {
     return errors;
 }
 
-async function createUser(req, res) {
+async function register(req, res) {
     try {
         // Get the data from the request body.
         const { name, email, password, gender } = req.body;
@@ -124,7 +124,7 @@ async function getMaleUsers(req, res) {
 }
 
 module.exports = {
-    createUser,
+    register,
     getUserById,
     updateUser,
     deleteUserById,

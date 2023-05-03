@@ -5,7 +5,7 @@ const Token = require('../../model/token.mongo');
 const User = require('../../model/user.mongo');
 
 function generateAccessToken(user) {
-    return jwt.sign(user, process.env.JWT_SECRET_ACCESS_TOKEN, {expiresIn: '30s'});
+    return jwt.sign(user, process.env.JWT_SECRET_ACCESS_TOKEN, {expiresIn: '100s'});
 }
 
 // Handle refresh token

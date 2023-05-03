@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const {
-    createUser,
+    register,
     getUserById,
     updateUser,
     deleteUserById,
@@ -22,7 +22,7 @@ router.get('/:id', authenticateToken, getUserById);
 router.get('/male', authenticateToken, getMaleUsers);
 
 // Define a route for creating a new user.
-router.post('/', createUser);
+router.post('/signup', register);
 
 // Define a route for updating a user by ID.
 router.patch('/:id', authenticateToken, updateUser);

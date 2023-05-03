@@ -1,13 +1,11 @@
-const mongoose = require('mongoose');
 const request = require('supertest');
 
 const app = require('../../server');
-const { generateAccessToken } = require('./auth.controller');
 const User = require('../../model/user.mongo');
 const Token = require('../../model/token.mongo');
 const { mongooseConnect, mongooseDisconnect } = require('../../utils/mongo');
 
-describe('Auth endpoints', () => {
+describe('Authentication Endpoints', () => {
     let testUser;
     let authToken;
 
@@ -22,15 +20,17 @@ describe('Auth endpoints', () => {
         await testUser.save();
 
         const res = await request(app)
-            .post('/api/auth/login')
+            .post('/api/login')
             .send({ email: 'testuser@example.com', password: 'password' });
-        authToken = res.body.token;
+        authToken = res.body.accessToken;
     });
 
     afterAll(async () => {
         await mongooseDisconnect();
 
-        await User.deleteOne({ email: 'testuser@example.com' });
+        await User.deleteMany({
+            email: { $in: ['testuser@example.com', 'user@example.com', 'test@example.com'] }
+        });
         await Token.deleteMany({});
     });
 
@@ -129,13 +129,13 @@ describe('Auth endpoints', () => {
         });
     });
 
-    describe('POST /api/auth/login', () => {
+    describe('POST /api/login', () => {
         test('should return an auth token for a valid login', async () => {
             const res = await request(app)
-                .post('/api/auth/login')
+                .post('/api/login')
                 .send({ email: 'testuser@example.com', password: 'password' });
             expect(res.statusCode).toEqual(200);
-            expect(res.body.token).toBeDefined();
+            expect(res.body.accessToken).toBeDefined();
         });
 
         test('should return an error for an invalid login', async () => {
@@ -147,11 +147,11 @@ describe('Auth endpoints', () => {
         });
     });
     
-    describe('POST /api/auth/logout', () => {
+    describe('POST /api/logout', () => {
         test('should delete the auth token for the current user', async () => {
             const res = await request(app)
-                .post('/api/auth/logout')
-                .set('Authorization', `Bearer ${authToken}`);
+                .post('/api/logout')
+                .set('authorization', `Bearer ${authToken}`);
             expect(res.statusCode).toEqual(200);
             expect(res.body.message).toEqual('Logged out successfully');
             const token = await Token.findOne({ token: authToken });
@@ -159,23 +159,23 @@ describe('Auth endpoints', () => {
         });
 
         test('should return an error if no auth token is provided', async () => {
-            const res = await request(app).post('/api/auth/logout');
+            const res = await request(app).post('/api/logout');
             expect(res.statusCode).toEqual(401);
             expect(res.body.error).toEqual('Unauthorized');
         });
     });
 
-    describe('GET /api/auth/token', () => {
+    describe('GET /api/token', () => {
         test('should return the auth token for the current user', async () => {
             const res = await request(app)
-                .get('/api/auth/token')
-                .set('Authorization', `Bearer ${authToken}`);
+                .get('/api/token')
+                .set('authorization', `Bearer ${authToken}`);
             expect(res.statusCode).toEqual(200);
-            expect(res.body.token).toEqual(authToken);
+            expect(res.body.accessToken).toBeDefined();
         });
 
         test('should return an error if no auth token is provided', async () => {
-            const res = await request(app).get('/api/auth/token');
+            const res = await request(app).get('/api/token');
             expect(res.statusCode).toEqual(401);
             expect(res.body.error).toEqual('Unauthorized');
         });
