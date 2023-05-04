@@ -47,13 +47,13 @@ async function updateUser(req, res) {
         if (!user) return res.status(404).json({ error: 'user not found' });
 
         // Update the user properties if they exist in the request body
-        if (req.body.name !== undefined) {
+        if (req.body.name) {
             user.name = req.body.name;
         }
-        if (req.body.email !== undefined) {
+        if (req.body.email) {
             user.email = req.body.email;
         }
-        if (req.body.password !== undefined) {
+        if (req.body.password) {
             user.password = req.body.password;
         }
 
