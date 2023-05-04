@@ -11,9 +11,11 @@ describe('Authentication Endpoints', () => {
 
     afterAll(async () => {
         await User.deleteMany({});
+        
         await Token.deleteMany({});
 
         await mongooseDisconnect();
+        
     });
 
     describe('User model', () => {

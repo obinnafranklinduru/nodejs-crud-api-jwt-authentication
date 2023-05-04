@@ -29,10 +29,12 @@ async function register(req, res) {
         const user = await User.create({ name, email, password, gender });
 
         // Send a 201 (Created) and the user object as the response.
-        res.status(201).send({user: user._id});
+        res.status(201).send({ user: user._id });
     } catch (error) {
         const errors = handleError(error);
-        res.status(400).send({errors});
+        if (errors) return res.status(400).send({ errors });
+        res.status(400).send(error.message);
+        
     }
 }
 
@@ -84,15 +86,16 @@ async function updateUser(req, res) {
 
 async function deleteUserById(req, res) {
     try {
-        // Find the user with the specified ID using the findByIdAndDelete() method, 
-        // which both finds and deletes the user object.
-        const user = await User.findByIdAndDelete(req.params.id);
+        // Delete the user with the specified ID using the deleteOne() method.
+        const result = await User.deleteOne({ _id: req.params.id });
 
         // If no user is found, return a 404 and an error message as the response.
-        if (!user) return res.status(404).json({ error: 'user not found' });
+        if (result.deletedCount === 0) return res.status(404).json({ error: 'user not found' });
 
-        res.status(204).send(user);
+        // Return a 204 status code indicating success and an empty response body.
+        res.status(200).json({ message: 'User has been deleted' });
     } catch (error) {
+        // If an error occurs, return a 500 status code and the error message as the response.
         res.status(500).send(error);
     }
 }
