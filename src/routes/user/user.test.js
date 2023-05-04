@@ -11,8 +11,9 @@ describe('User Routes Endpoints', () => {
   beforeAll(async () => await mongooseConnect());
 
   afterAll(async () => {
-    await User.deleteMany({});
+ 
     await TokenWhitelist.deleteMany({});
+    await User.deleteOne({ email: 'testuser@example.com' });;
 
     await mongooseDisconnect()
   });
