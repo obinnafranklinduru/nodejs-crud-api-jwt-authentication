@@ -38,21 +38,6 @@ async function register(req, res) {
     }
 }
 
-async function getUserById(req, res) {
-    try {
-        // Find the user with the specified ID using the findById() method.
-        const user = await User.findById(req.params.id);
-
-        // If no user is found, return a 404 and an error message as the response.
-        if (!user) return res.status(404).json({ error: 'user not found' });
-
-        // Send the user object as the response.
-        res.status(200).send({ user });
-    } catch (error) {
-        res.status(401).send(error);
-    }
-}
-
 async function updateUser(req, res) {
     try {
         // Find the user by id
@@ -84,6 +69,44 @@ async function updateUser(req, res) {
     }
 }
 
+async function getUsers(req, res) {
+    try {
+        // to retrieve all the user objects from the  database.
+        const users = await User.find({}, { '__v': 0, 'password': 0, });
+
+        // Send the retrieved user objects as the response.
+        res.status(200).send(users);
+    } catch (error) {
+        res.status(401).json({ message: 'Unauthorized' });
+    }
+}
+
+async function getUserById(req, res) {
+    try {
+        // Find the user with the specified ID using the findById() method.
+        const user = await User.findById(req.params.id, { '__v': 0, 'password': 0, });
+
+        // If no user is found, return a 404 and an error message as the response.
+        if (!user) return res.status(404).json({ error: 'user not found' });
+
+        // Send the user object as the response.
+        res.status(200).send({ user });
+    } catch (error) {
+        res.status(401).send(error);
+    }
+}
+
+async function getMaleUsers(req, res) {
+    try {        
+        // Retrieve all the user objects from the database whose "gender" property is set to "male".
+        const users = await User.find({ gender: 'Male' });
+        
+        res.send(users);
+    } catch (error) {
+        res.status(401).send({ error: 'Please authenticate.' });
+    }
+}
+
 async function deleteUserById(req, res) {
     try {
         // Delete the user with the specified ID using the deleteOne() method.
@@ -97,29 +120,6 @@ async function deleteUserById(req, res) {
     } catch (error) {
         // If an error occurs, return a 500 status code and the error message as the response.
         res.status(500).send(error);
-    }
-}
-
-async function getUsers(req, res) {
-    try {
-        // to retrieve all the user objects from the  database.
-        const users = await User.find({});
-
-        // Send the retrieved user objects as the response.
-        res.status(200).send(users);
-    } catch (error) {
-        res.status(401).json({ message: 'Unauthorized' });
-    }
-}
-
-async function getMaleUsers(req, res) {
-    try {        
-        // Retrieve all the user objects from the database whose "gender" property is set to "male".
-        const users = await User.find({ gender: 'male' });
-        
-        res.send(users);
-    } catch (error) {
-        res.status(401).send({ error: 'Please authenticate.' });
     }
 }
 
