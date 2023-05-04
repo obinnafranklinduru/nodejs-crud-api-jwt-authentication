@@ -2,7 +2,7 @@ const request = require('supertest');
 
 const app = require('../../app');
 const User = require('../../model/user.mongo');
-const Token = require('../../model/token.mongo');
+const Token = require('../../model/tokenblacklist.mongo');
 const { mongooseConnect, mongooseDisconnect } = require('../../utils/mongo');
 
 describe('Authentication Endpoints', () => {

@@ -32,7 +32,6 @@ Once the API server is running, you can use [Postman](https://www.postman.com/) 
 | GET    | /api/users      | Retrieve all users                                    |
 | GET    | /api/users/male | Retrieve all male users (requires JWT authentication) |
 | POST   | /api/login      | Authenticate user and generate JWT token              |
-| POST   | /api/token      | Generate a Refresh Token and Authenticate user        |
 
 ### Authentication
 

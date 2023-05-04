@@ -2,34 +2,9 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 require('dotenv').config()
 
-const Token = require('../../model/token.mongo');
 const User = require('../../model/user.mongo');
-
-function generateAccessToken(user) {
-    return jwt.sign(user, process.env.JWT_SECRET_ACCESS_TOKEN, { expiresIn: '1h' });
-}
-
-// Handle refresh token
-async function getRefreshToken(req, res) {
-    const refreshToken = req.body.token
-    if (!refreshToken) return res.status(404).send({ error: 'refresh token is required' });
-
-    try {
-        const token = await Token.findOne({ token: refreshToken });
-        if (!token) return res.status(403).send({ error: 'token not found' });
-
-        jwt.verify(refreshToken, process.env.JWT_SECRET_REFRESH_TOKEN, (err, user) => {
-            if (err) return res.status(403).json({ error: err.message });
-        
-            const accessToken = generateAccessToken({ _id: user._id })
-
-            res.status(200).header('Authorization', accessToken)
-                .json({ accessToken: accessToken })
-        });
-    } catch (error) {
-        res.status(500).send(error);
-    }
-}
+const TokenBlacklist = require('../../model/tokenblacklist.mongo');
+const TokenWhitelist = require('../../model/tokenwhitelist.mongo');
 
 // Handle user login request
 async function login(req, res) {
@@ -48,15 +23,15 @@ async function login(req, res) {
         if (!auth) throw new Error('Incorrect email or password');
 
         // Generate JWT token and send it to the client
-        const accessToken = generateAccessToken({ _id: user._id });
-
-        const refreshToken = jwt.sign({ _id: user._id }, process.env.JWT_SECRET_REFRESH_TOKEN, { expiresIn: '1h' });
-
-        await Token.create({ token: refreshToken });
+        const accessToken = jwt.sign({ _id: user._id }, process.env.JWT_SECRET_ACCESS_TOKEN, { expiresIn: '1h' });
+        
+        // Add the token to the whitelist
+        const whitelistedToken = new TokenWhitelist({ token: accessToken });
+        await whitelistedToken.save();
 
         res.status(200)
             .header('Authorization', accessToken)
-            .json({ accessToken: accessToken, refreshToken: refreshToken });
+            .json({ accessToken: accessToken });
     } catch (err) {
         res.status(401).json({ error: err.message });
     }
@@ -65,18 +40,22 @@ async function login(req, res) {
 // Handle user logout request
 async function logout(req, res) {
     try {
+        // Extract the Authorization header and the token from it
         const token = req.body.token;
-        if (!token) return res.status(401).send({ error: 'Token is required' });
 
-        // remove token from Token collection to prevent future use
-        const deletedToken = await Token.findOneAndDelete({ token });
+        if (!token) throw new Error('Token is required');
 
-        if (!deletedToken) return res.status(401)
-            .json({ message: 'Unable to logout' });
+        // Check if token is in the whitelist
+        const whitelistedToken = await TokenWhitelist.findOne({ token });
+        if (!whitelistedToken) return res.status(401).json({ message: 'Token Invaild' });
 
-        res.status(200)
-            .json({ message: 'Logged out successfully' });
+        // Add the token to the blacklist
+        const blacklistedToken = new TokenBlacklist({ token });
+        await blacklistedToken.save();
 
+        await TokenWhitelist.findOneAndDelete({ token });
+
+        res.status(200).json({ message: 'Logout successful' });
     } catch (err) {
         console.error('Error logging out user', err.message);
         res.status(500).json({ error: 'Internal server error' });
@@ -84,27 +63,33 @@ async function logout(req, res) {
 }
 
 // Middleware to authenticate requests
-function authenticateToken(req, res, next) {
-    // Extract the Authorization header and the token from it
-    const authHeader = req.header('Authorization');
+async function authenticateToken(req, res, next) {
+    try {
+        // Extract the Authorization header and the token from it
+        const authHeader = req.header('Authorization');
 
-    // If no authHeader is present, return an error response
-    if (!authHeader) return res.status(401).json({ message: 'Unauthorized' });
+        // If no authHeader is present, return an error response
+        if (!authHeader) return res.status(401).json({ message: 'Unauthorized' });
 
-    // Verify the authHeader using the secret key
-    jwt.verify(authHeader, process.env.JWT_SECRET_ACCESS_TOKEN, (err, user) => {
-        // If the authHeader is invalid, return a forbidden error response
-        if (err) return res.status(401).json({ message: 'Unauthorized' });
+        // Check if token is in the blacklist
+        const blacklistedToken = await TokenBlacklist.findOne({ token: authHeader });
+        if (blacklistedToken) return res.status(401).json({ message: 'Unauthorized' });
 
-        // Store the user object in the request object and move to the next middleware
-        req.user = user;
-        next();
-    });
+        // Verify the authHeader using the secret key
+        jwt.verify(authHeader, process.env.JWT_SECRET_ACCESS_TOKEN, (err, user) => {
+            // If the authHeader is invalid, return a forbidden error response
+            if (err) return res.status(401).json({ message: 'Unauthorized' });
+
+            // Store the user object in the request object and move to the next middleware
+            req.user = user;
+            next();
+        });
+    } catch (error) {
+        console.error('Error verifying token', error);
+    }
 }
 
 module.exports = {
-    generateAccessToken,
-    getRefreshToken,
     login,
     logout,
     authenticateToken,
