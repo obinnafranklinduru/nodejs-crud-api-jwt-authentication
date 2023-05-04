@@ -25,14 +25,14 @@ Once the API server is running, you can use [Postman](https://www.postman.com/) 
 
 | Method | Endpoint    | Description                                           |
 | ------ | ----------- | ----------------------------------------------------- |
-| POST   | /api/users/signup| Register a new user                                    |
-| GET    | /api/users/:id  | Retrieve a user by ID (requires JWT authentication)   |
-| PUT    | /api/users/:id  | Update a user by ID (requires JWT authentication)     |
-| DELETE | /api/users/:id  | Delete a user by ID (requires JWT authentication)     |
-| GET    | /api/users      | Retrieve all users                                    |
-| GET    | /api/users/male | Retrieve all male users (requires JWT authentication) |
-| POST   | /api/login      | Authenticate user and generate JWT token              |
-| POST   | /api/logout     | Authenticate user and blacklist JWT token             |
+| POST   | /api/users/signup | Register a new user                                   |
+| GET    | /api/users/:id    | Retrieve a user by ID (requires JWT authentication)   |
+| PUT    | /api/users/:id    | Update a user by ID (requires JWT authentication)     |
+| DELETE | /api/users/:id    | Delete a user by ID (requires JWT authentication)     |
+| GET    | /api/users        | Retrieve all users (require JWT authentication)       |
+| GET    | /api/users/male   | Retrieve all male users (requires JWT authentication) |
+| POST   | /api/login        | Authenticate user and generate JWT token              |
+| POST   | /api/logout       | Authenticate user and blacklist JWT token             |
 
 ### Authentication
 
