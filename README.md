@@ -25,7 +25,7 @@ Once the API server is running, you can use [Postman](https://www.postman.com/) 
 
 | Method | Endpoint    | Description                                           |
 | ------ | ----------- | ----------------------------------------------------- |
-| POST   | /api/users      | Create a new user                                     |
+| POST   | /api/users/signup| Register a new user                                    |
 | GET    | /api/users/:id  | Retrieve a user by ID (requires JWT authentication)   |
 | PUT    | /api/users/:id  | Update a user by ID (requires JWT authentication)     |
 | DELETE | /api/users/:id  | Delete a user by ID (requires JWT authentication)     |
