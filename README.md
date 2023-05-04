@@ -27,7 +27,7 @@ Once the API server is running, you can use [Postman](https://www.postman.com/) 
 | ------ | ----------- | ----------------------------------------------------- |
 | POST   | /api/users/signup | Register a new user                                   |
 | GET    | /api/users/:id    | Retrieve a user by ID (requires JWT authentication)   |
-| PUT    | /api/users/:id    | Update a user by ID (requires JWT authentication)     |
+| PATCH  | /api/users/:id    | Update a user by ID (requires JWT authentication)     |
 | DELETE | /api/users/:id    | Delete a user by ID (requires JWT authentication)     |
 | GET    | /api/users        | Retrieve all users (require JWT authentication)       |
 | GET    | /api/users/male   | Retrieve all male users (requires JWT authentication) |
