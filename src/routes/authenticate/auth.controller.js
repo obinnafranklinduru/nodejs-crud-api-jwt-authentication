@@ -31,7 +31,7 @@ async function login(req, res) {
 
         res.status(200)
             .header('Authorization', accessToken)
-            .json({ accessToken: accessToken });
+            .json({ accessToken });
     } catch (err) {
         res.status(401).json({ error: err.message });
     }
