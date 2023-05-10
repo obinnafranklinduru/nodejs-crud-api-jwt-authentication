@@ -8,7 +8,7 @@ To run this project, you will need to have the following installed on your syste
 
 - [Node.js](https://nodejs.org/en/)
 - [npm](https://www.npmjs.com/)
-- [MongoDB](https://www.mongodb.com/)
+- [Mongo Atlas](https://www.mongodb.com/atlas/database/)
 
 ## Installation
 

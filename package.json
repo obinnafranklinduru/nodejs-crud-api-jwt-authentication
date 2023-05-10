@@ -4,8 +4,8 @@
   "description": "This is a Node.js API project that demonstrates how to perform CRUD (Create, Read, Update, Delete) operations on a database and utilize JSON Web Tokens (JWT) for user authentication. It includes endpoints for creating, reading, updating, and deleting users, as well as for retrieving all users and filtering by gender. The project uses the popular Express.js framework and MongoDB for the database.",
   "main": "src/server.js",
   "scripts": {
-    "start": "node server.js",
-    "watch": "nodemon server.js",
+    "start": "node src/server.js",
+    "watch": "nodemon src/server.js",
     "test": "jest --detectOpenHandles",
     "test-watch": "jest --watch"
   },
